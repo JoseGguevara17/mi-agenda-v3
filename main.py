@@ -30,9 +30,9 @@ if not st.session_state.auth:
     st.stop()
 
 # --- Cargar datos ---
-    df_deudas = load_data("deudas")
-    df_reuniones = load_data("reuniones")
-    df_tareas = load_data("tareas")
+df_deudas = load_data("deudas")
+df_reuniones = load_data("reuniones")
+df_tareas = load_data("tareas")
 
 # --- INTERFAZ (Tu diseño profesional) ---
 st.title("📅 Mi Agenda Profesional 24/7")
@@ -43,13 +43,16 @@ with col_left:
     st.subheader("🗓️ Calendario")
     sel_date = st.date_input("Selecciona un día", value=date.today())
     
-    # Mostrar reuniones del día
-    day_reunions = df_reuniones[df_reuniones['Fecha'].astype(str) == str(sel_date)]
-    if not day_reunions.empty:
-        for _, r in day_reunions.iterrows():
-            st.success(f"⏰ {r['Hora']} - {r['Asunto']}")
-    else:
-        st.info("No hay eventos para hoy.")
+    # 3. Verificación de seguridad para evitar el NameError
+    if 'df_reuniones' in locals():
+        day_reunions = df_reuniones[df_reuniones['Fecha'].astype(str) == str(sel_date)]
+        if not day_reunions.empty:
+            for _, r in day_reunions.iterrows():
+                # Usamos .get() por si la columna se llama 'Asunto' o 'Título'
+                asunto = r.get('Asunto', r.get('Título', 'Sin asunto'))
+                st.success(f"⏰ {r.get('Hora', '00:00')} - {asunto}")
+        else:
+            st.info("No hay eventos para hoy.")
 
 with col_right:
     # Banner de Deuda
@@ -68,6 +71,7 @@ with col_right:
         save_data(ed_deudas, "deudas")
 
         st.toast("¡Datos guardados en Google Sheets!")
+
 
 
 
