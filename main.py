@@ -30,9 +30,9 @@ if not st.session_state.auth:
     st.stop()
 
 # --- Cargar datos ---
-    df_deudas = load_data("deudas")
-    df_reuniones = load_data("reuniones")
-    df_tareas = load_data("tareas")
+df_deudas = load_data("deudas")
+df_reuniones = load_data("reuniones")
+df_tareas = load_data("tareas")
 
 # --- INTERFAZ (Tu diseño profesional) ---
 st.title("📅 Mi Agenda Profesional 24/7")
@@ -70,6 +70,7 @@ with col_right:
         save_data(ed_deudas, "deudas")
 
         st.toast("¡Datos guardados en Google Sheets!")
+
 
 
 
