@@ -29,10 +29,15 @@ if not st.session_state.auth:
                 st.rerun()
     st.stop()
 
-# --- CARGAR DATOS ---
-df_deudas = load_data("deudas")
-df_reuniones = load_data("reuniones")
-df_tareas = load_data("tareas")
+# --- Cargar datos y releer si falla ---
+try:
+    df_deudas = load_data("deudas")
+    df_reuniones = load_data("reuniones")
+    df_tareas = load_data("tareas")
+except Exception as e:
+    st.error("⚠️ Error al conectar con Google Sheets.")
+    st.info("Revisa que: 1. Las pestañas se llamen 'deudas', 'reuniones' y 'tareas'. 2. Hayas pegado la URL en los Secrets de Streamlit.")
+    st.stop()
 
 # --- INTERFAZ (Tu diseño profesional) ---
 st.title("📅 Mi Agenda Profesional 24/7")
@@ -68,4 +73,5 @@ with col_right:
         save_data(ed_deudas, "deudas")
 
         st.toast("¡Datos guardados en Google Sheets!")
+
 
