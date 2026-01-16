@@ -30,15 +30,9 @@ if not st.session_state.auth:
     st.stop()
 
 # --- Cargar datos ---
-try:
-    # Usamos minúsculas porque así me confirmaste que están en tu Sheets
     df_deudas = load_data("deudas")
     df_reuniones = load_data("reuniones")
     df_tareas = load_data("tareas")
-except Exception as e:
-    st.error("⚠️ No se pudo conectar con el Excel.")
-    st.info("Revisa que la URL en Secrets sea la correcta y el archivo sea 'Editor'.")
-    st.stop() # ESTO EVITA LOS ERRORES DE LAS FOTOS
 
 # --- INTERFAZ (Tu diseño profesional) ---
 st.title("📅 Mi Agenda Profesional 24/7")
@@ -76,6 +70,7 @@ with col_right:
         save_data(ed_deudas, "deudas")
 
         st.toast("¡Datos guardados en Google Sheets!")
+
 
 
 
