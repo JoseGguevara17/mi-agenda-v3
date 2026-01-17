@@ -59,8 +59,17 @@ df_deudas = load_data("deudas", cols_deudas)
 df_reuniones = load_data("reuniones", cols_reuniones)
 df_tareas = load_data("tareas", cols_tareas)
 
+with st.sidebar:
+    st.title("⚙️ Opciones")
+    if st.button("🔄 Actualizar Datos"):
+        st.cache_data.clear()
+        st.rerun()
+    if st.button("🚪 Cerrar Sesión"):
+        st.session_state.auth = False
+        st.rerun()
+
 # --- INTERFAZ PRINCIPAL ---
-st.title("📅 Mi Agenda Profesional 24/7")
+st.title("📅 Agenda Personal 24/7")
 st.divider()
 
 col_left, col_right = st.columns([1, 2], gap="large")
@@ -139,5 +148,6 @@ with col_right:
         )
         if st.button("Guardar Reuniones"):
             save_data(ed_reuniones, "reuniones")
+
 
 
