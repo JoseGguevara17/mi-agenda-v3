@@ -1,47 +1,65 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
+import requests
 from datetime import date
 
-# --- CONFIGURACIÓN DE PÁGINA ---
+# --- 1. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Agenda Pro 24/7", page_icon="🚀", layout="wide")
 
-# Conexión con Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
+# --- 2. MOTOR DE CONEXIÓN (Apps Script) ---
+# Tu ID de hoja ya está aquí basado en tus capturas
+SHEET_ID = "AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz"
 
 def load_data(sheet_name, default_cols):
     try:
-        # ttl="0" para asegurar que siempre traiga datos frescos al recargar
-        df = conn.read(worksheet=sheet_name, ttl=0)
-        if df.empty:
-            return pd.DataFrame(columns=default_cols)
+        # Lectura rápida vía CSV público
+        url = f"https://docs.google.com/spreadsheets/d/AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz/gviz/tq?tqx=out:csv&sheet=Base_Datos_Agenda"
+        df = pd.read_csv(url)
+        # Limpiar nombres de columnas por si acaso
+        df.columns = [c.strip() for c in df.columns]
         return df
     except Exception:
         return pd.DataFrame(columns=default_cols)
 
 def save_data(df, sheet_name):
     try:
-        # Limpieza: eliminamos filas vacías y convertimos fechas a texto para Sheets
-        df_save = df.dropna(how="all").copy()
-        for col in df_save.columns:
-            if pd.api.types.is_datetime64_any_dtype(df_save[col]):
-                df_save[col] = df_save[col].dt.strftime('%Y-%m-%d')
+        # --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz/exec"
         
-        conn.update(worksheet=sheet_name, data=df_save)
-        st.cache_data.clear()
-        st.success(f"¡Datos de {sheet_name} actualizados!")
-        st.rerun()
-    except Exception as e:
-        st.error(f"Error al guardar en {sheet_name}: {e}")
+        if URL_SCRIPT == "https://script.google.com/macros/s/AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz/exec":
+            st.error("⚠️ Falta pegar la URL del Apps Script en el código.")
+            return
 
-# --- LOGIN ---
+        # Limpieza de datos
+        df_save = df.dropna(how="all").fillna("")
+        
+        # Convertir fechas a texto para que Google no las corrompa
+        for col in df_save.columns:
+            if "fecha" in col.lower() or "limite" in col.lower():
+                df_save[col] = df_save[col].astype(str)
+
+        data_list = df_save.values.tolist()
+        payload = {"sheet": sheet_name, "data": data_list}
+        
+        response = requests.post(URL_SCRIPT, json=payload)
+        
+        if response.status_code == 200:
+            st.success(f"✅ ¡{sheet_name.capitalize()} guardado con éxito!")
+            st.cache_data.clear()
+            st.rerun()
+        else:
+            st.error("❌ Error de servidor al guardar.")
+    except Exception as e:
+        st.error(f"Error crítico: {e}")
+
+# --- 3. LOGIN ---
 if "auth" not in st.session_state: st.session_state.auth = False
 if not st.session_state.auth:
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.title("🔐 Acceso Agenda")
         pw = st.text_input("Contraseña", type="password")
-        if st.button("Entrar"):
+        if st.button("Entrar", use_container_width=True):
             if pw == "admin123":
                 st.session_state.auth = True
                 st.rerun()
@@ -49,122 +67,74 @@ if not st.session_state.auth:
                 st.error("Contraseña incorrecta")
     st.stop()
 
-# --- DEFINICIÓN DE COLUMNAS (Basado en tu Sheets) ---
+# --- 4. CARGA DE DATOS ---
 cols_deudas = ["Concepto", "Monto", "Tipo", "Persona", "Fecha"]
 cols_reuniones = ["Asunto", "Fecha", "Hora", "Link", "Notas"]
 cols_tareas = ["Tarea", "Prioridad", "Fecha Limite", "Completado"]
 
-# Carga de datos
 df_deudas = load_data("deudas", cols_deudas)
 df_reuniones = load_data("reuniones", cols_reuniones)
 df_tareas = load_data("tareas", cols_tareas)
 
-with st.sidebar:
-    st.title("⚙️ Opciones")
-    if st.button("🔄 Actualizar Datos"):
-        st.cache_data.clear()
-        st.rerun()
-    if st.button("🚪 Cerrar Sesión"):
-        st.session_state.auth = False
-        st.rerun()
+# --- 5. INTERFAZ PRINCIPAL ---
+st.title("🚀 Panel de Control Personal")
+st.caption(f"Hoy es: {date.today().strftime('%A, %d de %B %Y')}")
 
-# --- INTERFAZ PRINCIPAL ---
-st.title("📅 Agenda Personal 24/7")
+# Métricas de resumen (Le da el toque profesional)
+m1, m2, m3 = st.columns(3)
+with m1:
+    total_deuda = pd.to_numeric(df_deudas[df_deudas["Tipo"]=="Debo"]["Monto"], errors='coerce').sum()
+    st.metric("Deuda Total", f"${total_deuda:,.2f}")
+with m2:
+    pendientes = len(df_tareas[df_tareas["Completado"] == False])
+    st.metric("Tareas Pendientes", pendientes)
+with m3:
+    reuniones_hoy = len(df_reuniones[df_reuniones["Fecha"].astype(str) == str(date.today())])
+    st.metric("Eventos hoy", reuniones_hoy)
+
 st.divider()
 
 col_left, col_right = st.columns([1, 2], gap="large")
 
 # --- COLUMNA IZQUIERDA: CALENDARIO ---
 with col_left:
-    st.subheader("🗓️ Eventos del Día")
-    sel_date = st.date_input("Ver agenda del día:", value=date.today())
-    
-    if not df_reuniones.empty and 'Fecha' in df_reuniones.columns:
-        # Filtramos asegurando que ambos sean strings para comparar
+    with st.container(border=True):
+        st.subheader("🗓️ Agenda del Día")
+        sel_date = st.date_input("Selecciona fecha:", value=date.today())
+        
         day_reunions = df_reuniones[df_reuniones['Fecha'].astype(str) == str(sel_date)]
         if not day_reunions.empty:
             for _, r in day_reunions.iterrows():
-                st.info(f"⏰ **{r.get('Hora', '00:00')}** - {r.get('Asunto', 'Sin título')}")
-                if r.get('Link') and r['Link'] != "":
-                    st.link_button("Ir a la reunión", r['Link'])
+                st.info(f"**{r['Hora']}** - {r['Asunto']}")
+                if r.get('Link') and "http" in str(r['Link']):
+                    st.link_button("🔗 Unirse", r['Link'], use_container_width=True)
         else:
-            st.write("No tienes eventos programados.")
-    else:
-        st.info("La hoja de reuniones está vacía.")
+            st.write("Libre de compromisos.")
 
-# --- COLUMNA DERECHA: GESTIÓN ---
+# --- COLUMNA DERECHA: GESTIÓN POR PESTAÑAS ---
 with col_right:
-    # NUEVO: LISTA DE PRÓXIMOS EVENTOS
-    st.subheader("🚀 Próximas Actividades")
+    tab_deudas, tab_tareas, tab_reuniones = st.tabs(["💰 Deudas", "✅ Tareas", "🎥 Config. Reuniones"])
     
-    if not df_reuniones.empty:
-        # Convertimos la columna Fecha a datetime para poder ordenar correctamente
-        df_prox = df_reuniones.copy()
-        df_prox['Fecha_dt'] = pd.to_datetime(df_prox['Fecha'], errors='coerce')
-        
-        # Filtramos: solo fechas de hoy en adelante y ordenamos
-        hoy = pd.to_datetime(date.today())
-        proximas = df_prox[df_prox['Fecha_dt'] >= hoy].sort_values('Fecha_dt').head(3)
-
-        if not proximas.empty:
-            for _, fila in proximas.iterrows():
-                # Formato de cada fila de la lista
-                fecha_formateada = fila['Fecha_dt'].strftime('%d/%m/%Y')
-                st.markdown(f"✅ **{fecha_formateada}** - {fila['Asunto']}  *( {fila['Hora']} )*")
-        else:
-            st.write("No hay actividades próximas en la agenda.")
-    else:
-        st.write("No hay datos de reuniones disponibles.")
-    
-    st.divider() # Una línea separadora antes de los editores
-
-    # EDITOR DE DEUDAS
-    with st.expander("💰 Gestionar Deudas", expanded=True):
-        ed_deudas = st.data_editor(
-            df_deudas, 
-            num_rows="dynamic", 
-            use_container_width=True,
-            column_config={
-                "Tipo": st.column_config.SelectboxColumn("Tipo", options=["Debo", "Me deben", "Pagado"], required=True),
-                "Monto": st.column_config.NumberColumn("Monto", format="$%.2f"),
-                "Fecha": st.column_config.DateColumn("Fecha")
-            }
-        )
-        if st.button("Guardar Deudas"):
+    with tab_deudas:
+        st.write("### Registro Financiero")
+        ed_deudas = st.data_editor(df_deudas, num_rows="dynamic", use_container_width=True, key="ed_deudas")
+        if st.button("Guardar Cambios en Deudas", key="btn_d"):
             save_data(ed_deudas, "deudas")
 
-    # EDITOR DE TAREAS
-    with st.expander("✅ Lista de Tareas", expanded=True):
-        ed_tareas = st.data_editor(
-            df_tareas,
-            num_rows="dynamic",
-            use_container_width=True,
-            column_config={
-                "Prioridad": st.column_config.SelectboxColumn("Prioridad", options=["Alta", "Media", "Baja"]),
-                "Fecha Limite": st.column_config.DateColumn("Fecha Limite"),
-                "Completado": st.column_config.CheckboxColumn("¿Listo?")
-            }
-        )
-        if st.button("Guardar Tareas"):
+    with tab_tareas:
+        st.write("### Lista de Pendientes")
+        ed_tareas = st.data_editor(df_tareas, num_rows="dynamic", use_container_width=True, key="ed_tareas")
+        if st.button("Guardar Cambios en Tareas", key="btn_t"):
             save_data(ed_tareas, "tareas")
 
-    # EDITOR DE REUNIONES (Para agregar nuevas)
-    with st.expander("🎥 Programar Reuniones"):
-        ed_reuniones = st.data_editor(
-            df_reuniones,
-            num_rows="dynamic",
-            use_container_width=True,
-            column_config={
-                "Fecha": st.column_config.DateColumn("Fecha"),
-                "Hora": st.column_config.TimeColumn("Hora")
-            }
-        )
-        if st.button("Guardar Reuniones"):
+    with tab_reuniones:
+        st.write("### Base de Datos de Reuniones")
+        ed_reuniones = st.data_editor(df_reuniones, num_rows="dynamic", use_container_width=True, key="ed_r")
+        if st.button("Guardar Cambios en Reuniones", key="btn_r"):
             save_data(ed_reuniones, "reuniones")
 
-
-
-
-
-
-
+with st.sidebar:
+    st.title("⚙️ Sistema")
+    if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        st.session_state.auth = False
+        st.rerun()
