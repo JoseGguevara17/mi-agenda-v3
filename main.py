@@ -77,7 +77,7 @@ df_reuniones = load_data("reuniones", cols_reuniones)
 df_tareas = load_data("tareas", cols_tareas)
 
 # --- 5. INTERFAZ PRINCIPAL ---
-st.title("🚀 Panel de Control Personal")
+st.title("🚀 Agenda Personal 24/7")
 st.caption(f"Hoy es: {date.today().strftime('%A, %d de %B %Y')}")
 
 # Métricas de resumen (Le da el toque profesional)
@@ -138,4 +138,5 @@ with st.sidebar:
     if st.button("🚪 Cerrar Sesión", use_container_width=True):
         st.session_state.auth = False
         st.rerun()
+
 
