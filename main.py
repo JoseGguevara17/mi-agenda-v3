@@ -39,7 +39,7 @@ if "auth" not in st.session_state: st.session_state.auth = False
 if not st.session_state.auth:
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        st.title("🔐 Acceso Agenda Pro")
+        st.title("🔐 Acceso Agenda")
         pw = st.text_input("Contraseña", type="password")
         if st.button("Entrar"):
             if pw == "admin123":
@@ -148,6 +148,7 @@ with col_right:
         )
         if st.button("Guardar Reuniones"):
             save_data(ed_reuniones, "reuniones")
+
 
 
 
