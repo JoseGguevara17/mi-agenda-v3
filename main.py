@@ -8,12 +8,12 @@ st.set_page_config(page_title="Agenda Pro 24/7", page_icon="🚀", layout="wide"
 
 # --- 2. MOTOR DE CONEXIÓN (Apps Script) ---
 # Tu ID de hoja ya está aquí basado en tus capturas
-SHEET_ID = "AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz"
+SHEET_ID = "1nR83Cu842oXPnQThcYvw0WAXP6Bwnc9Fr2QefdrznFk"
 
 def load_data(sheet_name, default_cols):
     try:
         # Lectura rápida vía CSV público
-        url = f"https://docs.google.com/spreadsheets/d/AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bCGOZm6hLorr_A8yWPSYtz/gviz/tq?tqx=out:csv&sheet=Base_Datos_Agenda"
+        url = f"https://docs.google.com/spreadsheets/d/1nR83Cu842oXPnQThcYvw0WAXP6Bwnc9Fr2QefdrznFk/gviz/tq?tqx=out:csv&sheet=Base_Datos_Agenda"
         df = pd.read_csv(url)
         # Limpiar nombres de columnas por si acaso
         df.columns = [c.strip() for c in df.columns]
@@ -138,5 +138,6 @@ with st.sidebar:
     if st.button("🚪 Cerrar Sesión", use_container_width=True):
         st.session_state.auth = False
         st.rerun()
+
 
 
