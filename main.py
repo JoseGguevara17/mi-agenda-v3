@@ -5,7 +5,31 @@ from datetime import date
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Agenda Pro 24/7", page_icon="🚀", layout="wide")
+# personalizado pagina
+st.markdown("""
+    <style>
+        /* Bordes de las tablas y editores */
+        [data-testid="stDataEditor"], .stDataFrame {
+            border: 2px solid #000000 !important;
+            border-radius: 5px;
+        }
+        
+        /* Bordes de los cuadros colapsables (Expanders) */
+        .streamlit-expanderHeader, .st-emotion-cache-p5msec {
+            border: 1px solid #000000 !important;
+        }
 
+        /* Líneas divisorias generales */
+        hr {
+            border-top: 2px solid #000000 !important;
+        }
+
+        /* Input de contraseña y textos */
+        .stTextInput > div > div > input {
+            border: 1px solid #000000 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 # Conexión con Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -161,6 +185,7 @@ with col_right:
         )
         if st.button("Guardar Reuniones"):
             save_data(ed_reuniones, "reuniones")
+
 
 
 
