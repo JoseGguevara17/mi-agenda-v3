@@ -128,7 +128,7 @@ with col_right:
             save_data(ed_tareas, "tareas")
 
     with tab_reuniones:
-        st.write("### Base de Datos de Reuniones")
+        st.write("### Agenda Reuniones")
         ed_reuniones = st.data_editor(df_reuniones, num_rows="dynamic", use_container_width=True, key="ed_r")
         if st.button("Guardar Cambios en Reuniones", key="btn_r"):
             save_data(ed_reuniones, "reuniones")
@@ -138,3 +138,4 @@ with st.sidebar:
     if st.button("🚪 Cerrar Sesión", use_container_width=True):
         st.session_state.auth = False
         st.rerun()
+
