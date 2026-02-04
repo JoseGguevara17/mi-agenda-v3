@@ -94,16 +94,29 @@ with col_left:
 
 # --- COLUMNA DERECHA: GESTIÓN ---
 with col_right:
-    # BANNER DE DEUDAS
-    monto_valido = pd.to_numeric(df_deudas["Monto"], errors='coerce').fillna(0)
-    total_deuda = monto_valido[df_deudas["Tipo"] == "Debo"].sum()
+    # NUEVO: LISTA DE PRÓXIMOS EVENTOS
+    st.subheader("🚀 Próximas Actividades")
     
-    st.markdown(f"""
-        <div style="background-color:#ff4b4b;padding:20px;border-radius:10px;color:white;text-align:center;margin-bottom:20px;">
-            <h2 style="color:white;margin:0;">💸 Deuda Total Pendiente</h2>
-            <h1 style="color:white;font-size:3em;margin:0;">${total_deuda:,.2f}</h1>
-        </div>
-    """, unsafe_allow_html=True)
+    if not df_reuniones.empty:
+        # Convertimos la columna Fecha a datetime para poder ordenar correctamente
+        df_prox = df_reuniones.copy()
+        df_prox['Fecha_dt'] = pd.to_datetime(df_prox['Fecha'], errors='coerce')
+        
+        # Filtramos: solo fechas de hoy en adelante y ordenamos
+        hoy = pd.to_datetime(date.today())
+        proximas = df_prox[df_prox['Fecha_dt'] >= hoy].sort_values('Fecha_dt').head(3)
+
+        if not proximas.empty:
+            for _, fila in proximas.iterrows():
+                # Formato de cada fila de la lista
+                fecha_formateada = fila['Fecha_dt'].strftime('%d/%m/%Y')
+                st.markdown(f"✅ **{fecha_formateada}** - {fila['Asunto']}  *( {fila['Hora']} )*")
+        else:
+            st.write("No hay actividades próximas en la agenda.")
+    else:
+        st.write("No hay datos de reuniones disponibles.")
+    
+    st.divider() # Una línea separadora antes de los editores
 
     # EDITOR DE DEUDAS
     with st.expander("💰 Gestionar Deudas", expanded=True):
@@ -148,6 +161,7 @@ with col_right:
         )
         if st.button("Guardar Reuniones"):
             save_data(ed_reuniones, "reuniones")
+
 
 
 
