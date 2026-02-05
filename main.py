@@ -20,24 +20,36 @@ def load_data(sheet_name, default_cols):
 
 def save_data(df, sheet_name):
     try:
-        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyif9GV3iUcCFRrbNPspAULM4C19yeWgiU2p1Ry7-iZCA5MZ_6Qod5MOMleA_3JXnM2/exec"
+        # 1. ASEGÚRATE QUE ESTA URL TERMINE EN /exec
+        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyif9GV3iUcCFRrbNPspAULM4C19yeWgiU2p1Ry7-iZCA5MZ_6Qod5MOMleA_3JXnM2/exec" 
+        
         df_save = df.dropna(how="all").fillna("")
         
-        # Formatear fechas antes de enviar para que Google Sheets las entienda siempre
+        # Formatear fechas
         for col in df_save.columns:
             if any(key in col.lower() for key in ["fecha", "limite"]):
                 df_save[col] = pd.to_datetime(df_save[col], errors='coerce').dt.strftime('%Y-%m-%d').fillna("")
         
         data_list = df_save.values.tolist()
         payload = {"sheet": sheet_name, "data": data_list}
-        response = requests.post(URL_SCRIPT, json=payload)
         
+        # Agregamos un mensaje de carga visual
+        with st.spinner('Comunicando con Google Sheets...'):
+            response = requests.post(URL_SCRIPT, json=payload, timeout=15)
+        
+        # ESTO ES LO QUE NOS DIRÁ POR QUÉ NO PASA NADA
         if response.status_code == 200:
             st.success(f"✅ ¡{sheet_name.capitalize()} actualizado!")
             st.cache_data.clear()
             st.rerun()
+        else:
+            # Si Google responde pero con error (ej. 401, 404, 500)
+            st.error(f"Error de respuesta: {response.status_code}")
+            st.warning("Revisa si la URL es correcta y tiene permisos para 'Anyone'.")
+            
     except Exception as e:
-        st.error(f"Error al guardar: {e}")
+        # Si ni siquiera puede conectar (ej. sin internet o URL rota)
+        st.error(f"No se pudo conectar con Google: {e}")
 
 # --- 3. LOGIN ---
 if "auth" not in st.session_state: st.session_state.auth = False
@@ -135,4 +147,5 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
