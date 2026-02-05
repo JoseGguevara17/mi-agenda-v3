@@ -20,7 +20,7 @@ def load_data(sheet_name, default_cols):
 
 def save_data(df, sheet_name):
     try:
-        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz-aXx79hgZEsAOAE44y2vvAuqx-u0sn9bTPn0doHFHb6bGCOZm6hLorr_A8yWPSYTz/exec"
+        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyif9GV3iUcCFRrbNPspAULM4C19yeWgiU2p1Ry7-iZCA5MZ_6Qod5MOMleA_3JXnM2/exec"
         df_save = df.dropna(how="all").fillna("")
         
         # Formatear fechas antes de enviar para que Google Sheets las entienda siempre
@@ -135,3 +135,4 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
