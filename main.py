@@ -120,7 +120,7 @@ with col_editores:
             column_config={
                 "Monto": st.column_config.NumberColumn("Monto", format="$%.2f"),
                 "Tipo": st.column_config.SelectboxColumn("Tipo", options=["Debo", "Me deben", "Pagado"]),
-                "Fecha": st.column_config.DateColumn("Fecha")
+                "Fecha": st.column_config.TextColumn("Fecha") # TextColumn evita el error
             }
         )
         if st.button("Guardar Deudas", key="btn_sd"): save_data(ed_deudas, "deudas")
@@ -131,63 +131,19 @@ with col_editores:
             df_tareas, num_rows="dynamic", use_container_width=True, key="ed_t",
             column_config={
                 "Prioridad": st.column_config.SelectboxColumn("Prioridad", options=["Alta", "Media", "Baja"]),
-                "Fecha Limite": st.column_config.DateColumn("Fecha Limite"),
+                "Fecha Limite": st.column_config.TextColumn("Fecha Limite"), # TextColumn evita el error
                 "Completado": st.column_config.CheckboxColumn("¿Listo?")
             }
         )
         if st.button("Guardar Tareas", key="btn_st"): save_data(ed_tareas, "tareas")
 
-with col_editores:
-    tab_d, tab_t, tab_r = st.tabs(["💰 Deudas", "✅ Tareas", "🎥 Config. Reuniones"])
-    
-    with tab_d:
-        st.write("### 💰 Control de Dinero")
-        # Aseguramos que los datos estén limpios antes de editarlos
-        df_deudas = df_deudas.fillna("")
-        ed_deudas = st.data_editor(
-            df_deudas, num_rows="dynamic", use_container_width=True, key="ed_d",
-            column_config={
-                "Monto": st.column_config.NumberColumn("Monto", format="$%.2f"),
-                "Tipo": st.column_config.SelectboxColumn("Tipo", options=["Debo", "Me deben", "Pagado"]),
-                # Cambiado a TextColumn para evitar el error de celdas vacías
-                "Fecha": st.column_config.TextColumn("Fecha") 
-            }
-        )
-        if st.button("Guardar Deudas", key="btn_sd"): 
-            save_data(ed_deudas, "deudas")
-
-    with tab_t:
-        st.write("### ✅ Lista de Tareas")
-        # Aseguramos que los datos estén limpios
-        df_tareas = df_tareas.fillna("")
-        ed_tareas = st.data_editor(
-            df_tareas, num_rows="dynamic", use_container_width=True, key="ed_t",
-            column_config={
-                "Prioridad": st.column_config.SelectboxColumn("Prioridad", options=["Alta", "Media", "Baja"]),
-                # Cambiado a TextColumn por seguridad con vacíos
-                "Fecha Limite": st.column_config.TextColumn("Fecha Limite"), 
-                "Completado": st.column_config.CheckboxColumn("¿Listo?")
-            }
-        )
-        if st.button("Guardar Tareas", key="btn_st"): 
-            save_data(ed_tareas, "tareas")
-
     with tab_r:
         st.write("### 🎥 Configuración de Reuniones")
-        # Aseguramos que los datos estén limpios
-        df_reuniones = df_reuniones.fillna("")
         ed_reuniones = st.data_editor(
             df_reuniones, num_rows="dynamic", use_container_width=True, key="ed_r",
             column_config={
-                "Fecha": st.column_config.TextColumn("Fecha"),
+                "Fecha": st.column_config.TextColumn("Fecha"), # TextColumn evita el error
                 "Hora": st.column_config.TextColumn("Hora")
             }
         )
-        if st.button("Guardar Reuniones", key="btn_sr"): 
-            save_data(ed_reuniones, "reuniones")
-
-
-
-
-
-
+        if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
