@@ -38,7 +38,7 @@ def save_data(df, sheet_name):
             response = requests.post(URL_SCRIPT, json=payload, timeout=15)
         
         # ESTO ES LO QUE NOS DIRÁ POR QUÉ NO PASA NADA
-       if response.status_code == 200:
+        if response.status_code == 200:
             st.success(f"✅ ¡{sheet_name.capitalize()} actualizado!")
             # Limpiamos caché para que el banner vea los datos nuevos
             st.cache_data.clear()
@@ -169,6 +169,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
