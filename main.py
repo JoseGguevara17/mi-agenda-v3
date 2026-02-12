@@ -69,9 +69,9 @@ cols_deudas = ["Concepto", "Monto", "Tipo", "Persona", "Fecha"]
 cols_reuniones = ["Asunto", "Fecha", "Hora", "Link", "Notas"]
 cols_tareas = ["Tarea", "Prioridad", "Fecha Limite", "Completado"]
 
-df_deudas = load_data("deudas", cols_deudas)
-df_reuniones = load_data("reuniones", cols_reuniones)
-df_tareas = load_data("tareas", cols_tareas)
+df_deudas = load_data("deudas", cols_deudas).fillna("")
+df_reuniones = load_data("reuniones", cols_reuniones).fillna("")
+df_tareas = load_data("tareas", cols_tareas).fillna("")
 
 # --- 5. INTERFAZ: BANNER DE MÉTRICAS ---
 st.title("📅 Mi Agenda Personal 24/7")
@@ -137,16 +137,26 @@ with col_editores:
         )
         if st.button("Guardar Tareas", key="btn_st"): save_data(ed_tareas, "tareas")
 
-    with tab_r:
-        st.write("### 🎥 Configuración de Reuniones")
-        ed_reuniones = st.data_editor(
-            df_reuniones, num_rows="dynamic", use_container_width=True, key="ed_r",
-            column_config={
-                "Fecha": st.column_config.DateColumn("Fecha"),
-                "Hora": st.column_config.TimeColumn("Hora")
-            }
-        )
-        if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+with tab_r:
+    st.write("### 🎥 Configuración de Reuniones")
+    # Añadimos una limpieza extra justo antes de mostrarlo
+    df_r_display = df_reuniones.copy()
+    
+    ed_reuniones = st.data_editor(
+        df_r_display, 
+        num_rows="dynamic", 
+        use_container_width=True, 
+        key="ed_r",
+        column_config={
+            # Quitamos temporalmente el formato DateColumn/TimeColumn 
+            # para ver si los datos cargan. Si cargan, el problema era el formato.
+            "Fecha": st.column_config.TextColumn("Fecha"),
+            "Hora": st.column_config.TextColumn("Hora")
+        }
+    )
+    if st.button("Guardar Reuniones", key="btn_sr"): 
+        save_data(ed_reuniones, "reuniones")
+
 
 
 
