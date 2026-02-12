@@ -76,37 +76,34 @@ df_tareas = load_data("tareas", cols_tareas).fillna("")
 # --- 5. INTERFAZ: BANNER DE MÉTRICAS ---
 st.title("📅 Mi Agenda Personal 24/7")
 
-# Contenedor del Banner
 with st.container():
     m1, m2, m3 = st.columns(3)
     
     # 💰 MÉTRICA DE DEUDAS
-    # Convertimos a número y sumamos solo si la columna existe
-    if "Monto" in df_deudas.columns:
-        # Eliminamos símbolos de $ o comas si los hay y sumamos
-        total_deuda = pd.to_numeric(df_deudas["Monto"].astype(str).replace('[\$,]', '', regex=True), errors='coerce').sum()
-    else:
-        total_deuda = 0
+    total_deuda = 0
+    if not df_deudas.empty and "Monto" in df_deudas.columns:
+        # Convertimos a número de forma segura
+        total_deuda = pd.to_numeric(df_deudas["Monto"], errors='coerce').fillna(0).sum()
     m1.metric("💰 Deuda Total", f"${total_deuda:,.2f}")
     
     # ✅ MÉTRICA DE TAREAS
-    # Contamos las que NO están marcadas como "True" o "1"
-    if "Completado" in df_tareas.columns:
-        pendientes = len(df_tareas[df_tareas["Completado"].astype(str).str.lower() != "true"])
-        # Restamos las filas que están totalmente vacías
-        filas_vacias = len(df_tareas[df_tareas["Tarea"].astype(str).strip() == ""])
-        val_tareas = max(0, pendientes - filas_vacias)
-    else:
-        val_tareas = 0
+    val_tareas = 0
+    if not df_tareas.empty and "Completado" in df_tareas.columns:
+        # Filtramos: Que la tarea no esté vacía Y que no esté completada
+        pendientes = df_tareas[
+            (df_tareas["Tarea"].fillna("").astype(str) != "") & 
+            (df_tareas["Completado"].astype(str).str.lower() != "true")
+        ]
+        val_tareas = len(pendientes)
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
     # 🎥 MÉTRICA DE EVENTOS HOY
-    if "Fecha" in df_reuniones.columns:
+    val_hoy = 0
+    if not df_reuniones.empty and "Fecha" in df_reuniones.columns:
         hoy_str = str(date.today())
-        # Filtramos por la fecha de hoy
-        val_hoy = len(df_reuniones[df_reuniones["Fecha"].astype(str).str.contains(hoy_str)])
-    else:
-        val_hoy = 0
+        # Buscamos coincidencias con la fecha de hoy
+        eventos_hoy = df_reuniones[df_reuniones["Fecha"].astype(str).str.contains(hoy_str, na=False)]
+        val_hoy = len(eventos_hoy)
     m3.metric("🎥 Eventos Hoy", val_hoy)
 
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
@@ -165,4 +162,5 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
