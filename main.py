@@ -23,40 +23,26 @@ def save_data(df, sheet_name):
         # 1. ASEGÚRATE QUE ESTA URL TERMINE EN /exec
         URL_SCRIPT = "https://script.google.com/macros/s/AKfycbx3apgbRy4I_Wzx5OMJb3Wv1xcQXeDa3RqNUYxi41bkeauA0BeoWNH6AuPVFU7VywNo/exec" 
         
+       # 2. Preparación de datos
         df_save = df.dropna(how="all").fillna("")
-        
-        # Formatear fechas
-        for col in df_save.columns:
-            if any(key in col.lower() for key in ["fecha", "limite"]):
-                df_save[col] = pd.to_datetime(df_save[col], errors='coerce').dt.strftime('%Y-%m-%d').fillna("")
-        
         data_list = df_save.values.tolist()
         payload = {"sheet": sheet_name, "data": data_list}
         
-        # Agregamos un mensaje de carga visual
-        with st.spinner('Comunicando con Google Sheets...'):
+        # 3. Envío de datos
+        with st.spinner('Guardando datos en la nube...'):
             response = requests.post(URL_SCRIPT, json=payload, timeout=15)
         
-        # ESTO ES LO QUE NOS DIRÁ POR QUÉ NO PASA NADA
+        # 4. Verificación de éxito 
         if response.status_code == 200:
-            st.success(f"✅ ¡{sheet_name.capitalize()} actualizado!")
-            # Limpiamos caché para que el banner vea los datos nuevos
+            st.success(f"✅ ¡{sheet_name.capitalize()} actualizado con éxito!")
+            # IMPORTANTE: Limpiamos la memoria para que el BANNER se actualice
             st.cache_data.clear()
-            st.rerun() 
+            st.rerun()
         else:
-            st.error(f"Error: {response.status_code}")
-            
+            st.error(f"Error del servidor: {response.status_code}")
+
     except Exception as e:
-        st.error(f"No se pudo conectar: {e}")
-    
-        else:
-            # Si Google responde pero con error (ej. 401, 404, 500)
-            st.error(f"Error de respuesta: {response.status_code}")
-            st.warning("Revisa si la URL es correcta y tiene permisos para 'Anyone'.")
-            
-    except Exception as e:
-        # Si ni siquiera puede conectar (ej. sin internet o URL rota)
-        st.error(f"No se pudo conectar con Google: {e}")
+        st.error(f"Error de conexión: {e}")
 
 # --- 3. LOGIN ---
 if "auth" not in st.session_state: st.session_state.auth = False
@@ -169,6 +155,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
