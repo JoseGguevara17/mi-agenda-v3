@@ -38,10 +38,20 @@ def save_data(df, sheet_name):
             response = requests.post(URL_SCRIPT, json=payload, timeout=15)
         
         # ESTO ES LO QUE NOS DIRÁ POR QUÉ NO PASA NADA
-        if response.status_code == 200:
+       if response.status_code == 200:
             st.success(f"✅ ¡{sheet_name.capitalize()} actualizado!")
-            st.cache_data.clear()
-            st.rerun()
+            
+            # --- AGREGA O SUSTITUYE ESTAS LÍNEAS AQUÍ ---
+            st.cache_data.clear()   # Borra la memoria de los datos viejos
+            if 'auth' in st.session_state:
+                # Mantenemos el auth para que no te saque de la app, 
+                # pero limpiamos lo demás para forzar recarga
+                keys_to_keep = ['auth']
+                for key in list(st.session_state.keys()):
+                    if key not in keys_to_keep:
+                        del st.session_state[key]
+            
+            st.rerun() # Recarga la página para que el banner
         else:
             # Si Google responde pero con error (ej. 401, 404, 500)
             st.error(f"Error de respuesta: {response.status_code}")
@@ -162,5 +172,6 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
