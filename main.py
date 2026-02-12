@@ -21,7 +21,7 @@ def load_data(sheet_name, default_cols):
 def save_data(df, sheet_name):
     try:
         # 1. ASEGÚRATE QUE ESTA URL TERMINE EN /exec
-        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyif9GV3iUcCFRrbNPspAULM4C19yeWgiU2p1Ry7-iZCA5MZ_6Qod5MOMleA_3JXnM2/exec" 
+        URL_SCRIPT = "https://script.google.com/macros/s/AKfycbx3apgbRy4I_Wzx5OMJb3Wv1xcQXeDa3RqNUYxi41bkeauA0BeoWNH6AuPVFU7VywNo/exec" 
         
         df_save = df.dropna(how="all").fillna("")
         
@@ -147,6 +147,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
