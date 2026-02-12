@@ -76,20 +76,38 @@ df_tareas = load_data("tareas", cols_tareas).fillna("")
 # --- 5. INTERFAZ: BANNER DE MÉTRICAS ---
 st.title("📅 Mi Agenda Personal 24/7")
 
-# Banner superior (KPIs)
+# Contenedor del Banner
 with st.container():
     m1, m2, m3 = st.columns(3)
-    # Cálculo de métricas con validación para evitar el error 'KeyError'
-    val_deuda = pd.to_numeric(df_deudas["Monto"], errors='coerce').sum() if "Monto" in df_deudas.columns else 0
-    m1.metric("💰 Deuda Total", f"${val_deuda:,.2f}")
     
-    val_tareas = len(df_tareas[df_tareas["Completado"].isin([False, 0, "False"])]) if "Completado" in df_tareas.columns else 0
+    # 💰 MÉTRICA DE DEUDAS
+    # Convertimos a número y sumamos solo si la columna existe
+    if "Monto" in df_deudas.columns:
+        # Eliminamos símbolos de $ o comas si los hay y sumamos
+        total_deuda = pd.to_numeric(df_deudas["Monto"].astype(str).replace('[\$,]', '', regex=True), errors='coerce').sum()
+    else:
+        total_deuda = 0
+    m1.metric("💰 Deuda Total", f"${total_deuda:,.2f}")
+    
+    # ✅ MÉTRICA DE TAREAS
+    # Contamos las que NO están marcadas como "True" o "1"
+    if "Completado" in df_tareas.columns:
+        pendientes = len(df_tareas[df_tareas["Completado"].astype(str).str.lower() != "true"])
+        # Restamos las filas que están totalmente vacías
+        filas_vacias = len(df_tareas[df_tareas["Tarea"].astype(str).strip() == ""])
+        val_tareas = max(0, pendientes - filas_vacias)
+    else:
+        val_tareas = 0
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
-    val_hoy = len(df_reuniones[df_reuniones["Fecha"].astype(str) == str(date.today())]) if "Fecha" in df_reuniones.columns else 0
+    # 🎥 MÉTRICA DE EVENTOS HOY
+    if "Fecha" in df_reuniones.columns:
+        hoy_str = str(date.today())
+        # Filtramos por la fecha de hoy
+        val_hoy = len(df_reuniones[df_reuniones["Fecha"].astype(str).str.contains(hoy_str)])
+    else:
+        val_hoy = 0
     m3.metric("🎥 Eventos Hoy", val_hoy)
-
-st.divider()
 
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
 col_guia, col_editores = st.columns([1, 2], gap="large")
@@ -147,3 +165,4 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
