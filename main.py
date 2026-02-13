@@ -90,13 +90,20 @@ with st.container():
         val_tareas = len(pendientes)
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
-    # 🎥 MÉTRICA DE EVENTOS HOY
+# 🎥 MÉTRICA DE EVENTOS HOY
     val_hoy = 0
     if not df_reuniones.empty and "Fecha" in df_reuniones.columns:
-        hoy_str = str(date.today())
-        # Buscamos coincidencias con la fecha de hoy
-        eventos_hoy = df_reuniones[df_reuniones["Fecha"].astype(str).str.contains(hoy_str, na=False)]
+        # Obtenemos la fecha de hoy en dos formatos comunes por si acaso
+        hoy_formato1 = date.today().strftime('%Y-%m-%d') # 2026-02-12
+        hoy_formato2 = date.today().strftime('%d/%m/%Y') # 12/02/2026
+        
+        # Filtramos la tabla buscando cualquiera de los dos formatos
+        eventos_hoy = df_reuniones[
+            df_reuniones["Fecha"].astype(str).str.contains(hoy_formato1, na=False) | 
+            df_reuniones["Fecha"].astype(str).str.contains(hoy_formato2, na=False)
+        ]
         val_hoy = len(eventos_hoy)
+    
     m3.metric("🎥 Eventos Hoy", val_hoy)
 
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
@@ -155,6 +162,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
