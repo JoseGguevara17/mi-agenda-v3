@@ -66,41 +66,48 @@ df_deudas = load_data("deudas", cols_deudas).fillna("")
 df_reuniones = load_data("reuniones", cols_reuniones).fillna("")
 df_tareas = load_data("tareas", cols_tareas).fillna("")
 
-# --- 5. INTERFAZ: BANNER DE MÉTRICAS ACTUALIZADO ---
+# --- 5. INTERFAZ: BANNER DE MÉTRICAS (Versión Blindada) ---
 st.title("📅 Mi Agenda Personal 24/7")
 
 with st.container():
     m1, m2, m3 = st.columns(3)
     
-    # 💰 MÉTRICA DE DEUDAS (Suma dinámica)
+    # 💰 DEUDA TOTAL (Suma dinámica)
     total_deuda = 0
-    if not df_deudas.empty and "Monto" in df_deudas.columns:
-        # Convertimos a número y sumamos (las celdas vacías cuentan como 0)
-        total_deuda = pd.to_numeric(df_deudas["Monto"], errors='coerce').fillna(0).sum()
+    if not df_deudas.empty:
+        # Buscamos la columna sin importar si es 'Monto' o 'monto'
+        col_monto = [c for c in df_deudas.columns if c.lower() == 'monto']
+        if col_monto:
+            total_deuda = pd.to_numeric(df_deudas[col_monto[0]], errors='coerce').fillna(0).sum()
     m1.metric("💰 Deuda Total", f"${total_deuda:,.2f}")
     
-    # ✅ MÉTRICA DE TAREAS (Cuenta dinámica)
+    # ✅ TAREAS PENDIENTES (Suma y resta dinámica)
     val_tareas = 0
-    if not df_tareas.empty and "Tarea" in df_tareas.columns:
-        # Solo contamos filas donde la columna 'Tarea' no esté vacía Y 'Completado' no sea True
-        pendientes = df_tareas[
-            (df_tareas["Tarea"].astype(str).str.strip() != "") & 
-            (df_tareas["Completado"].astype(str).lower() != "true")
-        ]
-        val_tareas = len(pendientes)
+    if not df_tareas.empty:
+        col_t = [c for c in df_tareas.columns if c.lower() == 'tarea']
+        col_c = [c for c in df_tareas.columns if c.lower() == 'completado']
+        if col_t and col_c:
+            # Filtramos: que la tarea tenga texto Y que NO esté marcada como True
+            pendientes = df_tareas[
+                (df_tareas[col_t[0]].fillna("").astype(str).str.strip() != "") & 
+                (df_tareas[col_c[0]].astype(str).str.lower() != "true")
+            ]
+            val_tareas = len(pendientes)
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
-    # 🎥 MÉTRICA DE EVENTOS HOY (La que ya arreglamos)
+    # 🎥 EVENTOS HOY (Reconocimiento de formato 13/2/2026)
     val_hoy = 0
-    if not df_reuniones.empty and "Fecha" in df_reuniones.columns:
-        f_guiones = date.today().strftime('%Y-%m-%d')
-        f_barras = date.today().strftime('%d/%m/%Y').replace('/0', '/')
-        
-        eventos_hoy = df_reuniones[
-            (df_reuniones['Fecha'].astype(str).str.contains(f_guiones, na=False)) |
-            (df_reuniones['Fecha'].astype(str).str.contains(f_barras, na=False))
-        ]
-        val_hoy = len(eventos_hoy)
+    if not df_reuniones.empty:
+        col_f = [c for c in df_reuniones.columns if c.lower() == 'fecha']
+        if col_f:
+            f_guiones = date.today().strftime('%Y-%m-%d')
+            f_barras = date.today().strftime('%d/%m/%Y').replace('/0', '/')
+            
+            eventos_hoy = df_reuniones[
+                (df_reuniones[col_f[0]].astype(str).str.contains(f_guiones, na=False)) |
+                (df_reuniones[col_f[0]].astype(str).str.contains(f_barras, na=False))
+            ]
+            val_hoy = len(eventos_hoy)
     m3.metric("🎥 Eventos Hoy", val_hoy)
     
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
@@ -169,6 +176,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
