@@ -66,47 +66,41 @@ df_deudas = load_data("deudas", cols_deudas).fillna("")
 df_reuniones = load_data("reuniones", cols_reuniones).fillna("")
 df_tareas = load_data("tareas", cols_tareas).fillna("")
 
-# --- 5. INTERFAZ: BANNER DE MÉTRICAS ---
+# --- 5. INTERFAZ: BANNER DE MÉTRICAS ACTUALIZADO ---
 st.title("📅 Mi Agenda Personal 24/7")
 
 with st.container():
     m1, m2, m3 = st.columns(3)
     
-    # 💰 MÉTRICA DE DEUDAS
+    # 💰 MÉTRICA DE DEUDAS (Suma dinámica)
     total_deuda = 0
     if not df_deudas.empty and "Monto" in df_deudas.columns:
-        # Convertimos a número de forma segura
+        # Convertimos a número y sumamos (las celdas vacías cuentan como 0)
         total_deuda = pd.to_numeric(df_deudas["Monto"], errors='coerce').fillna(0).sum()
     m1.metric("💰 Deuda Total", f"${total_deuda:,.2f}")
     
-    # ✅ MÉTRICA DE TAREAS
+    # ✅ MÉTRICA DE TAREAS (Cuenta dinámica)
     val_tareas = 0
-    if not df_tareas.empty and "Completado" in df_tareas.columns:
-        # Filtramos: Que la tarea no esté vacía Y que no esté completada
+    if not df_tareas.empty and "Tarea" in df_tareas.columns:
+        # Solo contamos filas donde la columna 'Tarea' no esté vacía Y 'Completado' no sea True
         pendientes = df_tareas[
-            (df_tareas["Tarea"].fillna("").astype(str) != "") & 
-            (df_tareas["Completado"].astype(str).str.lower() != "true")
+            (df_tareas["Tarea"].astype(str).str.strip() != "") & 
+            (df_tareas["Completado"].astype(str).lower() != "true")
         ]
         val_tareas = len(pendientes)
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
-# 🎥 MÉTRICA DE EVENTOS HOY (Soporta 13/2/2026 y 2026-02-13)
+    # 🎥 MÉTRICA DE EVENTOS HOY (La que ya arreglamos)
     val_hoy = 0
     if not df_reuniones.empty and "Fecha" in df_reuniones.columns:
-        # Formatos que vamos a buscar
-        hoy_guiones = date.today().strftime('%Y-%m-%d') # 2026-02-13
-        hoy_barras = date.today().strftime('%d/%-m/%Y').replace('/0', '/') # 13/2/2026
+        f_guiones = date.today().strftime('%Y-%m-%d')
+        f_barras = date.today().strftime('%d/%m/%Y').replace('/0', '/')
         
-        # Limpiamos los datos de la tabla para comparar
-        col_fecha = df_reuniones["Fecha"].fillna("").astype(str).str.strip()
-        
-        # Contamos si aparece cualquiera de los dos formatos
         eventos_hoy = df_reuniones[
-            col_fecha.str.contains(hoy_guiones, na=False) | 
-            col_fecha.str.contains(hoy_barras, na=False)
+            (df_reuniones['Fecha'].astype(str).str.contains(f_guiones, na=False)) |
+            (df_reuniones['Fecha'].astype(str).str.contains(f_barras, na=False))
         ]
         val_hoy = len(eventos_hoy)
-    
     m3.metric("🎥 Eventos Hoy", val_hoy)
     
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
@@ -175,6 +169,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
