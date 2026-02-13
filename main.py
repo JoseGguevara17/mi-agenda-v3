@@ -109,11 +109,15 @@ with st.container():
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
 col_guia, col_editores = st.columns([1, 2], gap="large")
 
+# --- En la sección de col_guia ---
+    
+
 with col_guia:
     st.subheader("🗓️ Agenda Diaria")
     sel_date = st.date_input("Consultar fecha:", value=date.today())
     
-    reuniones_dia = df_reuniones[df_reuniones['Fecha'].astype(str) == str(sel_date)] if "Fecha" in df_reuniones.columns else pd.DataFrame()
+    fecha_seleccionada = str(sel_date)
+    reuniones_dia = df_reuniones[df_reuniones['Fecha'].astype(str).str.contains(fecha_seleccionada, na=False)] if "Fecha" in df_reuniones.columns else pd.DataFrame()
     
     if not reuniones_dia.empty:
         for _, r in reuniones_dia.iterrows():
@@ -162,6 +166,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
