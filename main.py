@@ -90,34 +90,43 @@ with st.container():
         val_tareas = len(pendientes)
     m2.metric("✅ Tareas Pendientes", val_tareas)
     
-# 🎥 MÉTRICA DE EVENTOS HOY
+# 🎥 MÉTRICA DE EVENTOS HOY (Soporta 13/2/2026 y 2026-02-13)
     val_hoy = 0
     if not df_reuniones.empty and "Fecha" in df_reuniones.columns:
-        # Obtenemos la fecha de hoy en dos formatos comunes por si acaso
-        hoy_formato1 = date.today().strftime('%Y-%m-%d') # 2026-02-12
-        hoy_formato2 = date.today().strftime('%d/%m/%Y') # 12/02/2026
+        # Formatos que vamos a buscar
+        hoy_guiones = date.today().strftime('%Y-%m-%d') # 2026-02-13
+        hoy_barras = date.today().strftime('%d/%-m/%Y').replace('/0', '/') # 13/2/2026
         
-        # Filtramos la tabla buscando cualquiera de los dos formatos
+        # Limpiamos los datos de la tabla para comparar
+        col_fecha = df_reuniones["Fecha"].fillna("").astype(str).str.strip()
+        
+        # Contamos si aparece cualquiera de los dos formatos
         eventos_hoy = df_reuniones[
-            df_reuniones["Fecha"].astype(str).str.contains(hoy_formato1, na=False) | 
-            df_reuniones["Fecha"].astype(str).str.contains(hoy_formato2, na=False)
+            col_fecha.str.contains(hoy_guiones, na=False) | 
+            col_fecha.str.contains(hoy_barras, na=False)
         ]
         val_hoy = len(eventos_hoy)
     
     m3.metric("🎥 Eventos Hoy", val_hoy)
-
+    
 # --- 6. CUERPO DE LA APP (CALENDARIO + EDITORES) ---
 col_guia, col_editores = st.columns([1, 2], gap="large")
 
 # --- En la sección de col_guia ---
-    
-
 with col_guia:
     st.subheader("🗓️ Agenda Diaria")
     sel_date = st.date_input("Consultar fecha:", value=date.today())
     
-    fecha_seleccionada = str(sel_date)
-    reuniones_dia = df_reuniones[df_reuniones['Fecha'].astype(str).str.contains(fecha_seleccionada, na=False)] if "Fecha" in df_reuniones.columns else pd.DataFrame()
+    # --- Reemplazo de líneas 120-121 ---
+    # Creamos dos formatos: uno con guiones (2026-02-13) y otro con barras (13/2/2026)
+    f_guiones = str(sel_date)
+    f_barras = sel_date.strftime('%d/%m/%Y').replace('/0', '/')
+
+    # Filtramos la tabla buscando AMBOS formatos para que el banner y la lista funcionen
+    reuniones_dia = df_reuniones[
+        (df_reuniones['Fecha'].astype(str).str.contains(f_guiones, na=False)) |
+        (df_reuniones['Fecha'].astype(str).str.contains(f_barras, na=False))
+    ] if "Fecha" in df_reuniones.columns else pd.DataFrame()
     
     if not reuniones_dia.empty:
         for _, r in reuniones_dia.iterrows():
@@ -166,6 +175,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
