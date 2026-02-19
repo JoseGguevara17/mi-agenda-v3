@@ -4,7 +4,7 @@ import requests
 from datetime import date
 
 # --- 1. CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Agenda Pro 24/7", page_icon="🚀", layout="wide")
+st.set_page_config(page_title="Agenda Cuam ", page_icon="🚀", layout="wide")
 
 # --- 2. MOTOR DE CONEXIÓN ---
 SHEET_ID = "1nR83Cu842oXPnQThcYvw0WAXP6Bwnc9Fr2QefdrznFk"
@@ -168,6 +168,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
