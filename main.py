@@ -72,14 +72,6 @@ st.title("📅 Mi Agenda Personal 24/7")
 with st.container():
     m1, m2, m3 = st.columns(3)
     
-    # 💰 DEUDA TOTAL (Suma dinámica)
-    total_deuda = 0
-    if not df_deudas.empty:
-        # Buscamos la columna sin importar si es 'Monto' o 'monto'
-        col_monto = [c for c in df_deudas.columns if c.lower() == 'monto']
-        if col_monto:
-            total_deuda = pd.to_numeric(df_deudas[col_monto[0]], errors='coerce').fillna(0).sum()
-    m1.metric("💰 Deuda Total", f"${total_deuda:,.2f}")
     
     # ✅ TAREAS PENDIENTES (Suma y resta dinámica)
     val_tareas = 0
@@ -176,6 +168,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
