@@ -67,7 +67,7 @@ df_reuniones = load_data("reuniones", cols_reuniones).fillna("")
 df_tareas = load_data("tareas", cols_tareas).fillna("")
 
 # --- 5. INTERFAZ: BANNER DE MÉTRICAS (Versión Blindada) ---
-st.title("📅 Mi Agenda Personal 24/7")
+st.title("📅 Agenda Personal 24/7")
 
 with st.container():
     m1, m2, m3 = st.columns(3)
@@ -132,7 +132,7 @@ with col_guia:
         st.info("Sin compromisos.")
 
 with col_editores:
-    tab_d, tab_t, tab_r = st.tabs(["💰 Deudas", "✅ Tareas", "🎥 Config. Reuniones"])
+    tab_d, tab_t, tab_r = st.tabs(["💰 Deudas y Gastos", "✅ Tareas", "🎥 Agendar Reuniones"])
     
     with tab_d:
         st.write("### 💰 Control de Dinero")
@@ -168,6 +168,7 @@ with col_editores:
             }
         )
         if st.button("Guardar Reuniones", key="btn_sr"): save_data(ed_reuniones, "reuniones")
+
 
 
 
